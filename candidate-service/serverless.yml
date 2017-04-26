@@ -52,62 +52,10 @@
 
 service: candidate-service
 
-#frameworkVersion: ">=1.1.0 <2.0.0"
-
 provider:
   name: aws
   runtime: nodejs4.3
-  stage: dev
-  region: us-east-1
-
-functions:
-  candidateSubmission:
-    handler: api/candidates.submit
-    memorySize: 128
-    description: Submit candidate information and starts interview process.
-    events:
-      - http:
-          path: candidates
-          method: post
-
-#    The following are a few example events you can configure
-#    NOTE: Please make sure to change your handler code to work with those events
-#    Check the event documentation for details
-#    events:
-#      - http:
-#          path: users/create
-#          method: get
-#      - s3: ${env:BUCKET}
-#      - schedule: rate(10 minutes)
-#      - sns: greeter-topic
-#      - stream: arn:aws:dynamodb:region:XXXXXX:table/foo/stream/1970-01-01T00:00:00.000
-#      - alexaSkill
-#      - iot:
-#          sql: "SELECT * FROM 'some_topic'"
-#      - cloudwatchEvent:
-#          event:
-#            source:
-#              - "aws.ec2"
-#            detail-type:
-#              - "EC2 Instance State-change Notification"
-#            detail:
-#              state:
-#                - pending
-#      - cloudwatchLog: '/aws/lambda/hello'
-
-#    Define function environment variables here
-#    environment:
-#      variable2: value2
-
-#CREATING IAM ROLES
-#
-#
-
-
-provider:
-  name: aws
-  runtime: nodejs4.3
-  stage: dev
+  #stage: dev
   region: us-east-1
   environment:
     CANDIDATE_TABLE: ${self:service}-${opt:stage, self:provider.stage}
@@ -119,8 +67,19 @@ provider:
         - dynamodb:Scan
         - dynamodb:GetItem
         - dynamodb:PutItem
-      Resource: "*"
-#ADDING DynamoDB resources
+      Resource: "arn:aws:dynamodb:${self:provider.region}:*:table/candidate-*"
+
+functions:
+  candidateSubmission:
+    handler: api/candidates.submit
+    memorySize: 128
+    description: Submit candidate information and starts interview process.
+    events:
+      - http:
+          path: candidates
+          method: post
+
+resources:
   Resources:
     CandidatesDynamoDbTable:
       Type: 'AWS::DynamoDB::Table'
@@ -140,15 +99,3 @@ provider:
         StreamSpecification:
           StreamViewType: "NEW_AND_OLD_IMAGES"
         TableName: ${self:provider.environment.CANDIDATE_TABLE}
-
-# you can add CloudFormation resource templates here
-#resources:
-#  Resources:
-#    NewResource:
-#      Type: AWS::S3::Bucket
-#      Properties:
-#        BucketName: my-new-bucket
-#  Outputs:
-#     NewOutput:
-#       Description: "Description for the output"
-#       Value: "Some output value"
